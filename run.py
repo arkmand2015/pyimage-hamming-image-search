@@ -9,6 +9,14 @@ import cv2
 import os
 import numpy as np
 import streamlit as st
+from google.oauth2 import service_account
+from google.cloud import storage
+
+# Create API client.
+credentials = service_account.Credentials.from_service_account_info(
+    st.secrets["gcp_service_account"]
+)
+client = storage.Client(credentials=credentials)
 
 def plt_imshow(title, image):
     # convert the image frame BGR to RGB color space and display it
@@ -40,6 +48,14 @@ def hamming(a, b):
     # compute and return the Hamming distance between the integers
     return bin(int(a) ^ int(b)).count("1")
 
+#Fetchs file from bucket
+
+def read_file(file_path,bucket_name='atx_banana_republic'):
+    bucket = client.bucket(bucket_name)
+    content = bucket.blob(file_path)
+    return content
+
+
 st.title('Demo pyimagesearch')
 args = {
     "tree": "vptree.pickle",
@@ -60,7 +76,7 @@ if image is not None:
     b,g,r = cv2.split(image)
     image2 = cv2.merge([r,g,b])
     st.image(image2)
-
+ 
     # load the input query image
 
     # compute the hash for the query image, then convert it
@@ -83,7 +99,8 @@ if image is not None:
             len(resultPaths), d, h))
 
         # loop over the result paths
-        for resultPath in resultPaths:
+        for resultPath in resultPaths[:20]:
             # load the result image and display it to our screen
-            result = cv2.imread(resultPath)
-            plt_imshow("Result", result)
+            st.image(f'https://storage.cloud.google.com/atx_banana_republic/{resultPath}',caption='Result', width=300)
+            #result = cv2.imread(resultPath)
+            
